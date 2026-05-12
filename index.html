@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lab Timer Controller</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  /* === DESIGN TOKENS === */
+  :root, [data-theme="light"] {
+    --color-bg: #f7f6f2;
+    --color-surface: #f9f8f5;
+    --color-surface-2: #fbfbf9;
+    --color-surface-offset: #f3f0ec;
+    --color-surface-dynamic: #e6e4df;
+    --color-divider: #dcd9d5;
+    --color-border: #d4d1ca;
+    --color-text: #28251d;
+    --color-text-muted: #7a7974;
+    --color-text-faint: #bab9b4;
+    --color-text-inverse: #f9f8f4;
+    --color-primary: #01696f;
+    --color-primary-hover: #0c4e54;
+    --color-primary-highlight: #cedcd8;
+    --color-warning: #964219;
+    --color-warning-hover: #713417;
+    --color-warning-highlight: #ddcfc6;
+    --color-error: #a12c7b;
+    --color-error-hover: #7d1e5e;
+    --color-error-highlight: #e0ced7;
+    --color-success: #437a22;
+    --color-success-hover: #2e5c10;
+    --color-success-highlight: #d4dfcc;
+    --color-gold: #d19900;
+    --color-gold-highlight: #e9e0c6;
+    --color-blue: #006494;
+    --color-blue-hover: #0b5177;
+    --color-blue-highlight: #c6d8e4;
+    --radius-sm: 0.375rem;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --radius-xl: 1rem;
+    --radius-full: 9999px;
+    --shadow-sm: 0 1px 2px oklch(0.2 0.01 80 / 0.06);
+    --shadow-md: 0 4px 12px oklch(0.2 0.01 80 / 0.08);
+    --shadow-lg: 0 12px 32px oklch(0.2 0.01 80 / 0.12);
+    --transition-interactive: 180ms cubic-bezier(0.16, 1, 0.3, 1);
+    --space-1: 0.25rem; --space-2: 0.5rem; --space-3: 0.75rem; --space-4: 1rem;
+    --space-5: 1.25rem; --space-6: 1.5rem; --space-8: 2rem; --space-10: 2.5rem;
+    --space-12: 3rem; --space-16: 4rem;
+    --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
+    --text-sm: clamp(0.875rem, 0.8rem + 0.35vw, 1rem);
+    --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
+    --text-lg: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+    --text-xl: clamp(1.5rem, 1.2rem + 1.25vw, 2.25rem);
+    --font-display: 'JetBrains Mono', 'Courier New', monospace;
+    --font-body: 'Inter', 'Helvetica Neue', sans-serif;
+  }
+
+  [data-theme="dark"] {
+    --color-bg: #0e1014;
+    --color-surface: #141619;
+    --color-surface-2: #1a1d21;
+    --color-surface-offset: #1e2126;
+    --color-surface-dynamic: #272c33;
+    --color-divider: #2a2f38;
+    --color-border: #343b45;
+    --color-text: #d0d4da;
+    --color-text-muted: #7a8494;
+    --color-text-faint: #4a5260;
+    --color-text-inverse: #0e1014;
+    --color-primary: #2ea8b0;
+    --color-primary-hover: #1e8a92;
+    --color-primary-highlight: #1a3a3d;
+    --color-warning: #e08040;
+    --color-warning-hover: #c96020;
+    --color-warning-highlight: #3d2a1a;
+    --color-error: #d06ab0;
+    --color-error-hover: #b84a90;
+    --color-error-highlight: #3d1a30;
+    --color-success: #6ab840;
+    --color-success-hover: #4a9820;
+    --color-success-highlight: #1a3010;
+    --color-gold: #e8b834;
+    --color-gold-highlight: #3d3010;
+    --color-blue: #4898d8;
+    --color-blue-hover: #2878b8;
+    --color-blue-highlight: #102030;
+    --shadow-sm: 0 1px 2px oklch(0 0 0 / 0.3);
+    --shadow-md: 0 4px 12px oklch(0 0 0 / 0.4);
+    --shadow-lg: 0 12px 32px oklch(0 0 0 / 0.5);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme]) {
+      --color-bg: #0e1014; --color-surface: #141619; --color-surface-2: #1a1d21;
+      --color-surface-offset: #1e2126; --color-surface-dynamic: #272c33;
+      --color-divider: #2a2f38; --color-border: #343b45;
+      --color-text: #d0d4da; --color-text-muted: #7a8494; --color-text-faint: #4a5260;
+      --color-primary: #2ea8b0; --color-primary-hover: #1e8a92; --color-primary-highlight: #1a3a3d;
+      --color-warning: #e08040; --color-warning-hover: #c96020; --color-warning-highlight: #3d2a1a;
+      --color-error: #d06ab0; --color-error-hover: #b84a90; --color-error-highlight: #3d1a30;
+      --color-success: #6ab840; --color-success-hover: #4a9820; --color-success-highlight: #1a3010;
+      --color-gold: #e8b834; --color-gold-highlight: #3d3010;
+      --color-blue: #4898d8; --color-blue-hover: #2878b8; --color-blue-highlight: #102030;
+    }
+  }
+
+  /* === BASE === */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
+  body {
+    min-height: 100dvh;
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--color-text);
+    background: var(--color-bg);
+    display: flex; flex-direction: column;
+  }
+  button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+  input { font: inherit; color: inherit; }
+  :focus-visible { outline: 2px solid var(--color-primary); outline-offset: 3px; border-radius: var(--radius-sm); }
+
+  /* === LAYOUT === */
+  .app-header {
+    background: var(--color-surface);
+    border-bottom: 1px solid var(--color-divider);
+    padding: var(--space-3) var(--space-6);
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: var(--shadow-sm);
+  }
+  .app-logo {
+    display: flex; align-items: center; gap: var(--space-3);
+    font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700;
+    letter-spacing: 0.04em; color: var(--color-text);
+    text-decoration: none;
+  }
+  .logo-icon { color: var(--color-primary); }
+  .header-actions { display: flex; align-items: center; gap: var(--space-2); }
+
+  .theme-toggle {
+    width: 36px; height: 36px; border-radius: var(--radius-md);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-text-muted); transition: color var(--transition-interactive), background var(--transition-interactive);
+  }
+  .theme-toggle:hover { background: var(--color-surface-offset); color: var(--color-text); }
+
+  .main { flex: 1; padding: var(--space-6); max-width: 1400px; margin: 0 auto; width: 100%; }
+
+  /* === SECTION HEADER === */
+  .section-header {
+    margin-bottom: var(--space-5);
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: var(--space-3);
+  }
+  .section-title {
+    font-family: var(--font-display); font-size: var(--text-sm); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-muted);
+  }
+
+  /* === LASER PROTOCOL (TOP) === */
+  .laser-section {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    margin-bottom: var(--space-6);
+    box-shadow: var(--shadow-sm);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .laser-header {
+    display: flex; align-items: flex-start; justify-content: space-between; flex-wrap: wrap; gap: var(--space-4);
+    margin-bottom: var(--space-5);
+  }
+  .laser-title-group { display: flex; flex-direction: column; gap: var(--space-1); }
+  .laser-title {
+    font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700;
+    color: var(--color-text); display: flex; align-items: center; gap: var(--space-2);
+  }
+  .laser-subtitle { font-size: var(--text-sm); color: var(--color-text-muted); }
+
+  .laser-status-badge {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-1) var(--space-3);
+    border-radius: var(--radius-full);
+    font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em;
+    transition: all var(--transition-interactive);
+  }
+  .laser-status-badge.off { background: var(--color-surface-offset); color: var(--color-text-muted); }
+  .laser-status-badge.waiting { background: var(--color-gold-highlight); color: var(--color-gold); }
+  .laser-status-badge.on { background: var(--color-success-highlight); color: var(--color-success); }
+  .laser-status-badge.cooling { background: var(--color-warning-highlight); color: var(--color-warning); }
+
+  .status-dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: currentColor;
+  }
+  .status-dot.pulse { animation: pulse-dot 1.2s ease-in-out infinite; }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.7); }
+  }
+
+  .laser-grid {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: var(--space-4); margin-bottom: var(--space-5);
+  }
+  .laser-metric {
+    background: var(--color-surface-offset);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    padding: var(--space-4);
+  }
+  .laser-metric-label {
+    font-size: var(--text-xs); color: var(--color-text-muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: var(--space-2);
+  }
+  .laser-metric-value {
+    font-family: var(--font-display); font-size: var(--text-xl); font-weight: 700;
+    color: var(--color-text); line-height: 1;
+    transition: color var(--transition-interactive);
+  }
+  .laser-metric-value.active { color: var(--color-success); }
+  .laser-metric-value.cooling { color: var(--color-warning); }
+  .laser-metric-value.waiting { color: var(--color-gold); }
+
+  /* Progress bar */
+  .progress-bar-wrap {
+    height: 6px; background: var(--color-surface-dynamic);
+    border-radius: var(--radius-full); overflow: hidden; margin-top: var(--space-3);
+  }
+  .progress-bar-fill {
+    height: 100%; border-radius: var(--radius-full);
+    transition: width 1s linear, background-color var(--transition-interactive);
+  }
+  .progress-bar-fill.on { background: var(--color-success); }
+  .progress-bar-fill.cooling { background: var(--color-warning); }
+  .progress-bar-fill.waiting { background: var(--color-gold); }
+
+  /* Laser controls */
+  .laser-controls { display: flex; align-items: center; gap: var(--space-3); flex-wrap: wrap; }
+
+  /* === BUTTONS === */
+  .btn {
+    display: inline-flex; align-items: center; gap: var(--space-2);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-md); font-size: var(--text-sm); font-weight: 500;
+    transition: background var(--transition-interactive), color var(--transition-interactive), box-shadow var(--transition-interactive);
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--color-primary); color: var(--color-text-inverse); }
+  .btn-primary:hover { background: var(--color-primary-hover); }
+  .btn-primary:active { filter: brightness(0.9); }
+  .btn-success { background: var(--color-success); color: #fff; }
+  .btn-success:hover { background: var(--color-success-hover); }
+  .btn-warning { background: var(--color-warning); color: #fff; }
+  .btn-warning:hover { background: var(--color-warning-hover); }
+  .btn-danger { background: var(--color-error); color: #fff; }
+  .btn-danger:hover { background: var(--color-error-hover); }
+  .btn-ghost {
+    background: transparent; color: var(--color-text-muted);
+    border: 1px solid var(--color-border);
+  }
+  .btn-ghost:hover { background: var(--color-surface-offset); color: var(--color-text); }
+  .btn:disabled { opacity: 0.4; pointer-events: none; }
+  .btn-sm { padding: var(--space-1) var(--space-3); font-size: var(--text-xs); }
+
+  /* === INSTRUCTION BANNER === */
+  .instruction-banner {
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    font-size: var(--text-sm);
+    display: flex; align-items: center; gap: var(--space-3);
+    margin-top: var(--space-4);
+    border: 1px solid transparent;
+    transition: all var(--transition-interactive);
+  }
+  .instruction-banner.info { background: var(--color-primary-highlight); border-color: color-mix(in oklch, var(--color-primary) 20%, transparent); color: var(--color-primary); }
+  .instruction-banner.warn { background: var(--color-warning-highlight); border-color: color-mix(in oklch, var(--color-warning) 20%, transparent); color: var(--color-warning); }
+  .instruction-banner.success { background: var(--color-success-highlight); border-color: color-mix(in oklch, var(--color-success) 20%, transparent); color: var(--color-success); }
+  .instruction-banner.gold { background: var(--color-gold-highlight); border-color: color-mix(in oklch, var(--color-gold) 20%, transparent); color: var(--color-gold); }
+  .instruction-banner svg { flex-shrink: 0; }
+
+  /* === TIMERS GRID === */
+  .timers-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--space-4);
+  }
+
+  /* === TIMER CARD === */
+  .timer-card {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    display: flex; flex-direction: column; gap: var(--space-4);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow var(--transition-interactive), border-color var(--transition-interactive);
+    position: relative; overflow: hidden;
+  }
+  .timer-card.running { border-color: color-mix(in oklch, var(--color-primary) 40%, var(--color-border)); }
+  .timer-card.running .card-accent-line { opacity: 1; }
+  .timer-card.expired { border-color: color-mix(in oklch, var(--color-error) 40%, var(--color-border)); }
+  .card-accent-line {
+    position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    background: var(--color-primary); opacity: 0;
+    transition: opacity var(--transition-interactive);
+  }
+  .timer-card.expired .card-accent-line { background: var(--color-error); opacity: 1; }
+
+  .timer-card-header {
+    display: flex; align-items: center; justify-content: space-between; gap: var(--space-2);
+  }
+  .timer-card-name-wrap { display: flex; align-items: center; gap: var(--space-2); flex: 1; min-width: 0; }
+  .timer-name-input {
+    background: transparent; border: none; border-bottom: 1px solid transparent;
+    font-size: var(--text-sm); font-weight: 600; color: var(--color-text);
+    width: 100%; padding: var(--space-1) 0;
+    transition: border-color var(--transition-interactive);
+  }
+  .timer-name-input:hover { border-bottom-color: var(--color-border); }
+  .timer-name-input:focus { outline: none; border-bottom-color: var(--color-primary); }
+
+  .timer-card-actions { display: flex; align-items: center; gap: var(--space-1); }
+  .icon-btn {
+    width: 28px; height: 28px; border-radius: var(--radius-sm);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--color-text-muted);
+    transition: background var(--transition-interactive), color var(--transition-interactive);
+  }
+  .icon-btn:hover { background: var(--color-surface-offset); color: var(--color-text); }
+  .icon-btn.danger:hover { background: var(--color-error-highlight); color: var(--color-error); }
+
+  .timer-display {
+    text-align: center; padding: var(--space-4) 0;
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-offset);
+  }
+  .timer-digits {
+    font-family: var(--font-display); font-size: clamp(2rem, 4vw + 1rem, 3.5rem);
+    font-weight: 700; letter-spacing: -0.02em; line-height: 1;
+    color: var(--color-text);
+    transition: color var(--transition-interactive);
+  }
+  .timer-digits.running { color: var(--color-primary); }
+  .timer-digits.expired { color: var(--color-error); animation: blink-expired 1s step-end infinite; }
+  @keyframes blink-expired {
+    0%, 100% { opacity: 1; } 50% { opacity: 0.3; }
+  }
+  .timer-status-text {
+    font-size: var(--text-xs); color: var(--color-text-muted); margin-top: var(--space-2);
+    text-transform: uppercase; letter-spacing: 0.06em;
+  }
+
+  .timer-progress { margin: 0 var(--space-1); }
+  .timer-progress .progress-bar-fill { background: var(--color-primary); }
+  .timer-progress .progress-bar-fill.expired { background: var(--color-error); }
+  .timer-progress-info {
+    display: flex; justify-content: space-between;
+    font-size: var(--text-xs); color: var(--color-text-faint); margin-top: var(--space-1);
+  }
+
+  /* Duration input */
+  .timer-config { display: flex; gap: var(--space-2); align-items: center; }
+  .duration-input-wrap { flex: 1; display: flex; align-items: center; gap: var(--space-1); }
+  .duration-label { font-size: var(--text-xs); color: var(--color-text-muted); }
+  .duration-fields { display: flex; gap: var(--space-1); align-items: center; }
+  .duration-field {
+    width: 48px; background: var(--color-surface-offset); border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm); padding: var(--space-1) var(--space-2);
+    font-family: var(--font-display); font-size: var(--text-sm); text-align: center;
+    color: var(--color-text);
+    transition: border-color var(--transition-interactive);
+  }
+  .duration-field:focus { outline: none; border-color: var(--color-primary); }
+  .duration-sep { color: var(--color-text-faint); font-family: var(--font-display); }
+
+  .timer-footer-controls { display: flex; gap: var(--space-2); }
+  .timer-footer-controls .btn { flex: 1; justify-content: center; }
+
+  /* === ADD TIMER === */
+  .add-timer-card {
+    border: 2px dashed var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: var(--space-3); min-height: 200px;
+    color: var(--color-text-muted);
+    cursor: pointer;
+    transition: border-color var(--transition-interactive), color var(--transition-interactive), background var(--transition-interactive);
+  }
+  .add-timer-card:hover { border-color: var(--color-primary); color: var(--color-primary); background: var(--color-primary-highlight); }
+  .add-timer-card span { font-size: var(--text-sm); font-weight: 500; }
+
+  /* === LOG PANEL === */
+  .log-panel {
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-5);
+    margin-top: var(--space-6);
+    box-shadow: var(--shadow-sm);
+  }
+  .log-list { display: flex; flex-direction: column; gap: var(--space-1); max-height: 180px; overflow-y: auto; }
+  .log-entry {
+    display: flex; align-items: baseline; gap: var(--space-3);
+    font-size: var(--text-xs); color: var(--color-text-muted);
+    padding: var(--space-1) var(--space-2);
+    border-radius: var(--radius-sm);
+    animation: log-appear 0.2s ease-out;
+  }
+  @keyframes log-appear {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: none; }
+  }
+  .log-entry:hover { background: var(--color-surface-offset); }
+  .log-time { font-family: var(--font-display); color: var(--color-text-faint); flex-shrink: 0; }
+  .log-msg { flex: 1; }
+  .log-entry.log-laser-on .log-msg { color: var(--color-success); }
+  .log-entry.log-laser-off .log-msg { color: var(--color-warning); }
+  .log-entry.log-timer .log-msg { color: var(--color-primary); }
+  .log-entry.log-alert .log-msg { color: var(--color-error); font-weight: 600; }
+  .log-empty { color: var(--color-text-faint); font-size: var(--text-xs); text-align: center; padding: var(--space-4); }
+
+  /* === ALERT MODAL === */
+  .modal-overlay {
+    position: fixed; inset: 0; background: oklch(0 0 0 / 0.7);
+    display: flex; align-items: center; justify-content: center;
+    z-index: 200; padding: var(--space-4);
+    opacity: 0; pointer-events: none;
+    transition: opacity var(--transition-interactive);
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: auto; }
+  .modal {
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-xl);
+    padding: var(--space-6);
+    max-width: 440px; width: 100%;
+    box-shadow: var(--shadow-lg);
+    transform: translateY(12px) scale(0.97);
+    transition: transform var(--transition-interactive);
+  }
+  .modal-overlay.open .modal { transform: none; }
+  .modal-icon { font-size: 2.5rem; text-align: center; margin-bottom: var(--space-3); }
+  .modal-title { font-family: var(--font-display); font-size: var(--text-lg); font-weight: 700; text-align: center; margin-bottom: var(--space-2); }
+  .modal-message { font-size: var(--text-sm); color: var(--color-text-muted); text-align: center; margin-bottom: var(--space-5); line-height: 1.6; }
+  .modal-actions { display: flex; gap: var(--space-3); justify-content: center; }
+  .modal-actions .btn { min-width: 120px; justify-content: center; }
+
+
+  /* === LASER COUNTDOWN FLASH === */
+  @keyframes countdown-flash {
+    0% { background: color-mix(in oklch, var(--color-error) 25%, var(--color-surface-offset)); }
+    100% { background: var(--color-surface-offset); }
+  }
+  .timer-display.countdown-flash {
+    animation: countdown-flash 0.6s ease-out;
+  }
+  .laser-countdown-overlay {
+    display: none;
+    position: absolute; inset: 0;
+    background: color-mix(in oklch, var(--color-error) 12%, var(--color-surface));
+    border-radius: calc(var(--radius-xl) - 1px);
+    align-items: center; justify-content: center;
+    flex-direction: column; gap: var(--space-2);
+    z-index: 2; pointer-events: none;
+    animation: countdown-flash 0.5s ease-out;
+  }
+  .laser-countdown-overlay.visible { display: flex; }
+  .laser-countdown-number {
+    font-family: var(--font-display); font-size: clamp(3rem, 6vw, 5rem);
+    font-weight: 700; color: var(--color-error);
+    line-height: 1;
+    animation: countdown-pulse 0.5s ease-out;
+  }
+  @keyframes countdown-pulse {
+    0% { transform: scale(1.4); opacity: 0.6; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+  .laser-countdown-label {
+    font-family: var(--font-display); font-size: var(--text-xs);
+    text-transform: uppercase; letter-spacing: 0.1em;
+    color: var(--color-error); opacity: 0.8;
+  }
+
+
+  /* === LASER MAIN BUTTON === */
+  .btn-laser-main {
+    font-size: var(--text-base);
+    padding: var(--space-3) var(--space-8);
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    box-shadow: var(--shadow-md);
+  }
+  .btn-laser-main:disabled {
+    opacity: 0.35;
+    pointer-events: none;
+  }
+
+
+  /* === LOGS GRID === */
+  .logs-grid {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin-top: var(--space-6);
+  }
+
+
+  /* === TIMER COLORS === */
+  :root {
+    --timer-color-0: #2ea8b0;
+    --timer-color-1: #e08040;
+    --timer-color-2: #6ab840;
+    --timer-color-3: #d06ab0;
+    --timer-color-4: #4898d8;
+    --timer-color-5: #e8b834;
+    --timer-color-6: #a86fdf;
+    --timer-color-7: #dd6974;
+  }
+  .timer-card-colored-border { border-top-width: 3px; }
+  .timer-color-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+    display: inline-block;
+  }
+  .log-entry .timer-color-dot { width: 8px; height: 8px; margin-right: 2px; }
+
+  /* === LAST MINUTE BLINK === */
+  @keyframes last-minute-blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
+  }
+  .timer-digits.last-minute {
+    animation: last-minute-blink 0.8s ease-in-out infinite;
+  }
+
+  /* === RESPONSIVE === */
+  @media (max-width: 600px) {
+    .main { padding: var(--space-4); }
+    .laser-section { padding: var(--space-4); }
+    .timers-grid { grid-template-columns: 1fr; }
+    .laser-grid { grid-template-columns: repeat(2, 1fr); }
+    .laser-controls { flex-direction: column; align-items: stretch; }
+    .laser-controls .btn { justify-content: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="app-header">
+  <a class="app-logo" href="#">
+    <svg class="logo-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-label="Lab Timer Logo">
+      <path d="M9 3h6M9 3v5l-4 8a2 2 0 0 0 1.8 2.9h10.4A2 2 0 0 0 19 16l-4-8V3"/>
+      <path d="M9 12h6"/>
+    </svg>
+    LAB TIMER
+  </a>
+  <div class="header-actions">
+    <button class="theme-toggle" data-theme-toggle aria-label="Switch to light mode">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+    </button>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="main">
+
+    <!-- LASER PROTOCOL -->
+  <section class="laser-section" id="laserSection">
+    <div class="laser-header">
+      <div class="laser-title-group">
+        <div class="laser-title">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
+          Laser Protocol
+        </div>
+        <div class="laser-subtitle">Hear "Balloon inflated" → click Laser ON (150 s) → say "Laser off" → 60 s cooldown → say "Inflate" → repeat</div>
+      </div>
+      <div id="laserStatusBadge" class="laser-status-badge off">
+        <span class="status-dot"></span>
+        <span id="laserStatusText">IDLE</span>
+      </div>
+    </div>
+
+    <div class="laser-grid">
+      <div class="laser-metric">
+        <div class="laser-metric-label">Laser State</div>
+        <div class="laser-metric-value" id="laserStateVal">OFF</div>
+      </div>
+      <div class="laser-metric">
+        <div class="laser-metric-label">Phase Timer</div>
+        <div class="laser-metric-value" id="laserPhaseTimer">—</div>
+        <div class="progress-bar-wrap" id="laserProgressWrap" style="display:none">
+          <div class="progress-bar-fill" id="laserProgressFill" style="width:100%"></div>
+        </div>
+      </div>
+      <div class="laser-metric">
+        <div class="laser-metric-label">Current Phase</div>
+        <div class="laser-metric-value" id="laserPhaseLabel">—</div>
+      </div>
+      <div class="laser-metric">
+        <div class="laser-metric-label">Cycle Count</div>
+        <div class="laser-metric-value" id="laserCycleCount">0</div>
+      </div>
+    </div>
+
+    <div id="instructionBanner" class="instruction-banner info" style="display:none">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>
+      <span id="instructionText"></span>
+    </div>
+
+    <div id="laserCountdownOverlay" class="laser-countdown-overlay" role="status" aria-live="assertive">
+      <div class="laser-countdown-number" id="laserCountdownNumber">10</div>
+      <div class="laser-countdown-label">seconds remaining</div>
+    </div>
+
+    <div class="laser-controls" style="margin-top: var(--space-4)">
+      <button class="btn btn-success btn-laser-main" id="btnLaserOn" onclick="laserOn()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Laser ON
+      </button>
+      <button class="btn btn-ghost btn-sm" id="btnLaserReset" onclick="laserReset()" style="display:none">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+        Reset
+      </button>
+    </div>
+  </section>
+
+  <!-- CUSTOM TIMERS -->
+  <div class="section-header">
+    <div class="section-title">Independent Timers</div>
+    <button class="btn btn-ghost btn-sm" onclick="resetAllTimers()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+      Reset All
+    </button>
+  </div>
+  <div class="timers-grid" id="timersGrid">
+    <!-- Timer cards injected here -->
+    <button class="add-timer-card" onclick="addTimer()" aria-label="Add new timer">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v8M8 12h8"/></svg>
+      <span>Add Timer</span>
+    </button>
+  </div>
+
+  <!-- LOGS -->
+  <div class="logs-grid">
+
+    <!-- LASER EVENT LOG -->
+    <div class="log-panel">
+      <div class="section-header" style="margin-bottom: var(--space-3)">
+        <div class="section-title">Laser Event Log</div>
+        <div style="display:flex;gap:var(--space-2)">
+          <button class="btn btn-ghost btn-sm" onclick="showFullLaserLog()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            Show laser log
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="clearLaserLog()">Clear</button>
+        </div>
+      </div>
+      <div class="log-list" id="laserLogList">
+        <div class="log-empty" id="laserLogEmpty">No laser events yet.</div>
+      </div>
+    </div>
+
+    <!-- TIMER LOG -->
+    <div class="log-panel">
+      <div class="section-header" style="margin-bottom: var(--space-3)">
+        <div class="section-title">Timer Log</div>
+        <div style="display:flex;gap:var(--space-2)">
+          <button class="btn btn-ghost btn-sm" onclick="showFullTimerLog()">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+            Show timer log
+          </button>
+          <button class="btn btn-ghost btn-sm" onclick="clearTimerLog()">Clear</button>
+        </div>
+      </div>
+      <div class="log-list" id="timerLogList">
+        <div class="log-empty" id="timerLogEmpty">No timer events yet.</div>
+      </div>
+    </div>
+
+  </div>
+
+</main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="alertModal">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="modal-icon" id="modalIcon">⚠️</div>
+    <div class="modal-title" id="modalTitle">Alert</div>
+    <div class="modal-message" id="modalMessage"></div>
+    <div class="modal-actions" id="modalActions"></div>
+  </div>
+</div>
+
+<script>
+
+// ---- THEME TOGGLE ----
+(function(){
+  const t = document.querySelector("[data-theme-toggle]");
+  const r = document.documentElement;
+  let d = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  r.setAttribute("data-theme", d);
+  t && t.addEventListener("click", () => {
+    d = d === "dark" ? "light" : "dark";
+    r.setAttribute("data-theme", d);
+    t.setAttribute("aria-label", "Switch to " + (d === "dark" ? "light" : "dark") + " mode");
+    t.innerHTML = d === "dark"
+      ? `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>`
+      : `<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>`;
+  });
+})();
+
+// ---- UTILITIES ----
+function fmtTime(sec) {
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = sec % 60;
+  if (h > 0) return `${String(h).padStart(2,"0")}:${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+  return `${String(m).padStart(2,"0")}:${String(s).padStart(2,"0")}`;
+}
+function nowStr() {
+  const d = new Date();
+  return `${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}:${String(d.getSeconds()).padStart(2,"0")}`;
+}
+// laserEvents stores entries for the "Show laser log" full-view (oldest first)
+let laserEvents = [];
+
+function addLaserLog(msg, cls) {
+  const ts = nowStr();
+  laserEvents.push({ ts, msg, cls: cls || "" });
+  const list  = document.getElementById("laserLogList");
+  const empty = document.getElementById("laserLogEmpty");
+  if (empty) empty.remove();
+  const el = document.createElement("div");
+  el.className = `log-entry ${cls || ""}`;
+  el.innerHTML = `<span class="log-time">${ts}</span><span class="log-msg">${msg}</span>`;
+  list.prepend(el);
+}
+
+// timerLogEvents stores all timer events for the full modal view
+let timerLogEvents = [];
+
+function addTimerLog(msg, cls, color) {
+  const ts = nowStr();
+  timerLogEvents.push({ ts, msg, cls: cls || "", color: color || "" });
+  const list  = document.getElementById("timerLogList");
+  const empty = document.getElementById("timerLogEmpty");
+  if (empty) empty.remove();
+  const el = document.createElement("div");
+  el.className = `log-entry ${cls || ""}`;
+  const dot = color ? `<span class="timer-color-dot" style="background:${color};display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:4px;flex-shrink:0"></span>` : "";
+  el.innerHTML = `<span class="log-time">${ts}</span><span class="log-msg" style="display:flex;align-items:center;gap:2px">${dot}${msg}</span>`;
+  list.prepend(el);
+}
+
+function showFullTimerLog() {
+  if (timerLogEvents.length === 0) {
+    showModal("📋", "Timer Log", "No timer events recorded yet.", [{ label: "OK", cls: "btn-primary" }]);
+    return;
+  }
+  const rows = timerLogEvents.map(e => {
+    const dot = e.color ? `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${e.color};margin-right:6px;flex-shrink:0;vertical-align:middle"></span>` : "";
+    return `<tr><td style="padding:4px 10px 4px 0;font-family:var(--font-display);font-size:var(--text-xs);color:var(--color-text-faint);white-space:nowrap">${e.ts}</td>` +
+      `<td style="padding:4px 0;font-size:var(--text-xs);color:var(--color-text)">${dot}${e.msg}</td></tr>`;
+  }).join("");
+  const tableHtml = `<div style="max-height:340px;overflow-y:auto;text-align:left">` +
+    `<table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table></div>`;
+  showModal("📋", "Full Timer Log", tableHtml, [{ label: "Close", cls: "btn-ghost" }], true);
+}
+
+function clearLaserLog() {
+  laserEvents = [];
+  document.getElementById("laserLogList").innerHTML =
+    `<div class="log-empty" id="laserLogEmpty">No laser events yet.</div>`;
+}
+
+function clearTimerLog() {
+  timerLogEvents = [];
+  document.getElementById("timerLogList").innerHTML =
+    `<div class="log-empty" id="timerLogEmpty">No timer events yet.</div>`;
+}
+
+function showFullLaserLog() {
+  if (laserEvents.length === 0) {
+    showModal("📋", "Laser Log", "No laser events recorded yet.", [{ label: "OK", cls: "btn-primary" }]);
+    return;
+  }
+  // Build table oldest-first
+  const rows = laserEvents.map(e =>
+    `<tr><td style="padding:4px 10px 4px 0;font-family:var(--font-display);font-size:var(--text-xs);color:var(--color-text-faint);white-space:nowrap">${e.ts}</td>` +
+    `<td style="padding:4px 0;font-size:var(--text-xs);color:${e.cls.includes('on') ? 'var(--color-success)' : 'var(--color-warning)'}">${e.msg}</td></tr>`
+  ).join("");
+  const tableHtml = `<div style="max-height:340px;overflow-y:auto;text-align:left">` +
+    `<table style="width:100%;border-collapse:collapse"><tbody>${rows}</tbody></table></div>`;
+  showModal("📋", "Full Laser Log", tableHtml, [{ label: "Close", cls: "btn-ghost" }], true);
+}
+
+// ---- MODAL ----
+function showModal(icon, title, message, actions, isHtml) {
+  document.getElementById("modalIcon").textContent = icon;
+  document.getElementById("modalTitle").textContent = title;
+  if (isHtml) {
+    document.getElementById("modalMessage").innerHTML = message;
+  } else {
+    document.getElementById("modalMessage").textContent = message;
+  }
+  const actEl = document.getElementById("modalActions");
+  actEl.innerHTML = "";
+  actions.forEach(a => {
+    const btn = document.createElement("button");
+    btn.className = `btn ${a.cls || "btn-primary"}`;
+    btn.textContent = a.label;
+    btn.onclick = () => { closeModal(); a.fn && a.fn(); };
+    actEl.appendChild(btn);
+  });
+  document.getElementById("alertModal").classList.add("open");
+}
+function closeModal() {
+  document.getElementById("alertModal").classList.remove("open");
+}
+document.getElementById("alertModal").addEventListener("click", e => {
+  if (e.target === document.getElementById("alertModal")) closeModal();
+});
+
+
+// ---- AUDIO COUNTDOWN (Web Audio API) ----
+let audioCtx = null;
+function getAudioCtx() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  return audioCtx;
+}
+
+function playBeep(freq, duration, volume, type) {
+  try {
+    const ctx = getAudioCtx();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = type || "sine";
+    osc.frequency.setValueAtTime(freq, ctx.currentTime);
+    gain.gain.setValueAtTime(volume || 0.5, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + duration);
+  } catch(e) { console.warn("Audio error:", e); }
+}
+
+// ---- BEEP EVENTS (Laser ON phase only) ----
+// • Every 60 s elapsed: gentle two-tone chime (milestone)
+// • 30 s remaining:     medium single beep (heads-up)
+// • 10 s remaining:     strong alert beep + visual overlay appears
+// No per-second ticking.
+
+function showLaserCountdown(n) {
+  const overlay = document.getElementById("laserCountdownOverlay");
+  const num = document.getElementById("laserCountdownNumber");
+  if (!overlay || !num) return;
+  num.textContent = n;
+  overlay.classList.add("visible");
+  num.style.animation = "none";
+  num.offsetHeight;
+  num.style.animation = "";
+}
+function hideLaserCountdown() {
+  const overlay = document.getElementById("laserCountdownOverlay");
+  if (overlay) overlay.classList.remove("visible");
+}
+
+// Gentle rising two-note chime — "1 minute passed"
+function beepMinuteMark() {
+  playBeep(523, 0.18, 0.45, "sine");                          // C5
+  setTimeout(() => playBeep(784, 0.28, 0.45, "sine"), 220);  // G5
+}
+
+// Medium single tone — "30 seconds left"
+function beep30s() {
+  playBeep(660, 0.22, 0.55, "sine");
+  setTimeout(() => playBeep(660, 0.22, 0.55, "sine"), 320);
+}
+
+// Strong alert tone — "10 seconds left"
+function beep10s() {
+  playBeep(880, 0.3, 0.7, "square");
+}
+
+// Unlock audio context on first user gesture (required by browsers)
+document.addEventListener("click", () => { try { getAudioCtx().resume(); } catch(e){} }, { once: false });
+
+// ---- LASER PROTOCOL ----
+// States: IDLE → LASER_ON(150s) → LASER_OFF_COOLDOWN(60s) → WAIT_INFLATE → LASER_ON(150s) → ...
+// Only two user actions: click "Laser ON" (at start & after each inflate), and Reset.
+// Log only laser ON and laser OFF events.
+
+const LASER_ON_DURATION  = 150;  // seconds
+const COOLDOWN_DURATION  = 60;   // seconds
+
+let laserState    = "IDLE";      // IDLE | LASER_ON | COOLDOWN | WAIT_INFLATE
+let laserTimer    = null;
+let laserRemaining = 0;
+let laserTotal     = 0;
+let laserCycles    = 0;
+
+// ---- badge / metric helpers ----
+function setLaserBadge(state) {
+  const badge = document.getElementById("laserStatusBadge");
+  const dot   = badge.querySelector(".status-dot");
+  const text  = document.getElementById("laserStatusText");
+  badge.className = "laser-status-badge";
+  dot.className   = "status-dot";
+  if (state === "LASER_ON") {
+    badge.classList.add("on");  dot.classList.add("pulse"); text.textContent = "LASER ON";
+  } else if (state === "COOLDOWN") {
+    badge.classList.add("cooling"); dot.classList.add("pulse"); text.textContent = "COOLDOWN";
+  } else if (state === "WAIT_INFLATE") {
+    badge.classList.add("waiting"); dot.classList.add("pulse"); text.textContent = "WAITING";
+  } else {
+    badge.classList.add("off"); text.textContent = "IDLE";
+  }
+}
+
+function setLaserMetrics(stateVal, phaseLabel, phaseTimer, progressPct, progressCls) {
+  const sv = document.getElementById("laserStateVal");
+  sv.textContent = stateVal;
+  sv.className = "laser-metric-value";
+  if (stateVal === "ON")  sv.classList.add("active");
+  if (stateVal === "OFF" && laserState === "COOLDOWN") sv.classList.add("cooling");
+  if (stateVal === "WAITING") sv.classList.add("waiting");
+
+  document.getElementById("laserPhaseLabel").textContent = phaseLabel;
+  document.getElementById("laserPhaseTimer").textContent = phaseTimer;
+  document.getElementById("laserCycleCount").textContent = laserCycles;
+
+  const wrap = document.getElementById("laserProgressWrap");
+  const fill = document.getElementById("laserProgressFill");
+  if (progressPct !== null) {
+    wrap.style.display = "block";
+    fill.style.width = progressPct + "%";
+    fill.className = "progress-bar-fill " + progressCls;
+  } else {
+    wrap.style.display = "none";
+  }
+}
+
+function showInstruction(msg, cls) {
+  const banner = document.getElementById("instructionBanner");
+  const text   = document.getElementById("instructionText");
+  if (msg) {
+    banner.style.display = "flex";
+    banner.className = "instruction-banner " + cls;
+    text.textContent = msg;
+  } else {
+    banner.style.display = "none";
+  }
+}
+
+// ---- main action: user clicks Laser ON ----
+function laserOn() {
+  if (laserState !== "IDLE" && laserState !== "WAIT_INFLATE") return;
+
+  laserCycles++;
+  laserState     = "LASER_ON";
+  laserRemaining = LASER_ON_DURATION;
+  laserTotal     = LASER_ON_DURATION;
+
+  document.getElementById("btnLaserOn").disabled = true;
+  document.getElementById("btnLaserReset").style.display = "";
+
+  setLaserBadge("LASER_ON");
+  setLaserMetrics("ON", "Laser ON", fmtTime(laserRemaining), 100, "on");
+  showInstruction("🔴 Say: \"Laser on\" — laser running for 150 seconds.", "success");
+
+  // Log laser ON with timestamp
+  addLaserLog("Laser ON — Cycle " + laserCycles + " started (150 s)", "log-laser-on");
+
+  laserTick();
+}
+
+function laserTick() {
+  if (laserTimer) clearInterval(laserTimer);
+  laserTimer = setInterval(() => {
+    laserRemaining--;
+    const pct = Math.max(0, (laserRemaining / laserTotal) * 100);
+
+    // Audio cues — LASER_ON and COOLDOWN phases
+    if (laserState === "LASER_ON") {
+      const elapsed = laserTotal - laserRemaining;
+      // 1-minute milestone (every 60 s elapsed: at 60 s, 120 s, ...)
+      if (elapsed > 0 && elapsed % 60 === 0) {
+        beepMinuteMark();
+      }
+      // 30 s remaining
+      if (laserRemaining === 30) {
+        beep30s();
+      }
+      // 10 s remaining — alert beep + show visual overlay
+      if (laserRemaining === 10) {
+        beep10s();
+        showLaserCountdown(10);
+      } else if (laserRemaining > 0 && laserRemaining < 10) {
+        showLaserCountdown(laserRemaining);
+      } else if (laserRemaining === 0) {
+        hideLaserCountdown();
+      } else if (laserRemaining > 10) {
+        hideLaserCountdown();
+      }
+    } else if (laserState === "COOLDOWN") {
+      // 30 s remaining during cooldown
+      if (laserRemaining === 30) {
+        beep30s();
+      }
+      // 10 s remaining during cooldown — alert beep + visual overlay
+      if (laserRemaining === 10) {
+        beep10s();
+        showLaserCountdown(10);
+      } else if (laserRemaining > 0 && laserRemaining < 10) {
+        showLaserCountdown(laserRemaining);
+      } else if (laserRemaining === 0) {
+        hideLaserCountdown();
+      } else if (laserRemaining > 10) {
+        hideLaserCountdown();
+      }
+    } else {
+      hideLaserCountdown();
+    }
+
+    if (laserState === "LASER_ON") {
+      setLaserMetrics("ON", "Laser ON", fmtTime(laserRemaining), pct, "on");
+      if (laserRemaining <= 0) {
+        clearInterval(laserTimer);
+        // Log laser OFF
+        addLaserLog("Laser OFF — Cycle " + laserCycles + " ended. Cooldown 60 s.", "log-laser-off");
+
+        // Transition to cooldown
+        laserState     = "COOLDOWN";
+        laserRemaining = COOLDOWN_DURATION;
+        laserTotal     = COOLDOWN_DURATION;
+        setLaserBadge("COOLDOWN");
+        setLaserMetrics("OFF", "Cooldown", fmtTime(laserRemaining), 100, "cooling");
+        showInstruction("🛑 Say: \"Laser off\" — balloon deflating. Cooldown 60 s running (do NOT tell operator to inflate yet).", "warn");
+        laserTick();
+      }
+    } else if (laserState === "COOLDOWN") {
+      setLaserMetrics("OFF", "Cooldown", fmtTime(laserRemaining), pct, "cooling");
+      if (laserRemaining <= 0) {
+        clearInterval(laserTimer);
+        // Cooldown done — tell operator to inflate
+        laserState = "WAIT_INFLATE";
+        setLaserBadge("WAIT_INFLATE");
+        setLaserMetrics("WAITING", "Waiting", "—", null, "");
+        showInstruction("✅ Say: \"Inflate the balloon\" — wait for operator to confirm, then click Laser ON.", "gold");
+        // Re-enable Laser ON button
+        document.getElementById("btnLaserOn").disabled = false;
+      }
+    }
+  }, 1000);
+}
+
+function laserReset() {
+  if (laserTimer) clearInterval(laserTimer);
+  laserState    = "IDLE";
+  laserRemaining = 0;
+  laserTotal     = 0;
+  laserCycles    = 0;
+  hideLaserCountdown();
+  setLaserBadge("IDLE");
+  setLaserMetrics("OFF", "—", "—", null, "");
+  showInstruction(null, "");
+  document.getElementById("btnLaserOn").disabled = false;
+  document.getElementById("btnLaserReset").style.display = "none";
+}
+
+// ---- INDEPENDENT TIMERS ----
+let timers = [];
+let timerIdCounter = 0;
+
+const TIMER_COLORS = [
+  "#2ea8b0","#e08040","#6ab840","#d06ab0",
+  "#4898d8","#e8b834","#a86fdf","#dd6974"
+];
+
+function addTimer(name, hh, mm, ss) {
+  const id = ++timerIdCounter;
+  const colorIdx = (id - 1) % TIMER_COLORS.length;
+  const timer = {
+    id, name: name || `Timer ${id}`,
+    hours: hh || 0, minutes: mm || 5, seconds: ss || 0,
+    totalSeconds: 0, remaining: 0,
+    startedAt: null,
+    offsetSeconds: 0,
+    offsetManuallySet: false,
+    color: TIMER_COLORS[colorIdx],
+    state: "idle",
+    interval: null
+  };
+  timers.push(timer);
+  renderTimerCard(timer);
+  return timer;
+}
+
+function renderTimerCard(timer) {
+  const grid = document.getElementById("timersGrid");
+  const addBtn = grid.querySelector(".add-timer-card");
+
+  const card = document.createElement("div");
+  card.className = "timer-card";
+  card.id = `timerCard-${timer.id}`;
+  card.style.borderTopColor = timer.color;
+  card.style.borderTopWidth = "3px";
+  card.innerHTML = `
+    <div class="card-accent-line" style="background:${timer.color}"></div>
+    <div class="timer-card-header">
+      <div class="timer-card-name-wrap">
+        <span class="timer-color-dot" style="background:${timer.color}"></span>
+        <input class="timer-name-input" type="text" value="${timer.name}"
+          aria-label="Timer name"
+          oninput="updateTimerName(${timer.id}, this.value)"
+          onblur="this.scrollLeft=0">
+      </div>
+      <div class="timer-card-actions">
+        <button class="icon-btn danger" onclick="removeTimer(${timer.id})" aria-label="Delete timer" title="Delete">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="timer-display" id="timerDisplay-${timer.id}">
+      <div class="timer-digits" id="timerDigits-${timer.id}">00:05:00</div>
+      <div class="timer-status-text" id="timerStatus-${timer.id}">Ready</div>
+    </div>
+
+    <div class="timer-progress" id="timerProgressWrap-${timer.id}" style="display:none">
+      <div class="progress-bar-wrap"><div class="progress-bar-fill" id="timerProgress-${timer.id}" style="width:100%"></div></div>
+      <div class="timer-progress-info">
+        <span id="timerProgressElapsed-${timer.id}">0:00</span>
+        <span id="timerProgressTotal-${timer.id}">5:00</span>
+      </div>
+    </div>
+
+    <div class="timer-config" id="timerConfig-${timer.id}">
+      <div style="display:flex;flex-direction:column;gap:var(--space-2);width:100%">
+        <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
+          <div class="duration-label" style="min-width:56px">Duration</div>
+          <div class="duration-fields">
+            <input class="duration-field" type="number" min="0" max="99" value="${String(timer.hours).padStart(2,"0")}"
+              id="timerHH-${timer.id}" aria-label="Hours" title="Hours"
+              onchange="updateTimerDuration(${timer.id})">
+            <span class="duration-sep">h</span>
+            <input class="duration-field" type="number" min="0" max="59" value="${String(timer.minutes).padStart(2,"0")}"
+              id="timerMM-${timer.id}" aria-label="Minutes" title="Minutes"
+              onchange="updateTimerDuration(${timer.id})">
+            <span class="duration-sep">m</span>
+            <input class="duration-field" type="number" min="0" max="59" value="${String(timer.seconds).padStart(2,"0")}"
+              id="timerSS-${timer.id}" aria-label="Seconds" title="Seconds"
+              onchange="updateTimerDuration(${timer.id})">
+            <span class="duration-sep">s</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-2);flex-wrap:wrap">
+          <label style="display:flex;align-items:center;gap:var(--space-2);cursor:pointer;font-size:var(--text-xs);color:var(--color-text-muted);user-select:none">
+            <input type="checkbox" id="timerAlreadyStarted-${timer.id}"
+              style="accent-color:var(--color-primary);width:14px;height:14px;cursor:pointer"
+              onchange="toggleAlreadyStarted(${timer.id})">
+            Already started
+          </label>
+          <input class="duration-field" type="time" id="timerStartedAt-${timer.id}"
+            style="width:90px;font-size:var(--text-xs);display:none"
+            title="Set the time when the timer was actually started"
+            onchange="updateTimerOffset(${timer.id})">
+          <span style="font-size:var(--text-xs);color:var(--color-text-faint)" id="timerOffsetLabel-${timer.id}" style="display:none"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="timer-footer-controls">
+      <button class="btn btn-primary btn-sm" id="timerBtnStart-${timer.id}" onclick="timerStartPause(${timer.id})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+        Start
+      </button>
+      <button class="btn btn-ghost btn-sm" id="timerBtnReset-${timer.id}" onclick="timerReset(${timer.id})">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+        Reset
+      </button>
+    </div>
+  `;
+  grid.insertBefore(card, addBtn);
+  updateTimerDisplay(timer);
+  // "Started at" field is hidden until user checks 'Already started'
+}
+
+function getTimer(id) { return timers.find(t => t.id === id); }
+
+function updateTimerName(id, val) {
+  const t = getTimer(id);
+  if (t) t.name = val || `Timer ${id}`;
+}
+
+function updateTimerDuration(id) {
+  const t = getTimer(id);
+  if (!t || t.state !== "idle") return;
+  t.hours = parseInt(document.getElementById(`timerHH-${id}`).value) || 0;
+  t.minutes = parseInt(document.getElementById(`timerMM-${id}`).value) || 0;
+  t.seconds = parseInt(document.getElementById(`timerSS-${id}`).value) || 0;
+  const total = t.hours*3600 + t.minutes*60 + t.seconds;
+  document.getElementById(`timerDigits-${id}`).textContent = fmtTime(total);
+  updateTimerOffset(id); // re-validate offset against new duration
+}
+
+function setTimerStartedAtDefault(id) {
+  const inp = document.getElementById(`timerStartedAt-${id}`);
+  if (!inp) return;
+  const now = new Date();
+  inp.value = String(now.getHours()).padStart(2,"0") + ":" + String(now.getMinutes()).padStart(2,"0");
+}
+
+function toggleAlreadyStarted(id) {
+  const cb    = document.getElementById(`timerAlreadyStarted-${id}`);
+  const inp   = document.getElementById(`timerStartedAt-${id}`);
+  const label = document.getElementById(`timerOffsetLabel-${id}`);
+  const t     = getTimer(id);
+  if (!cb || !inp || !t) return;
+  if (cb.checked) {
+    setTimerStartedAtDefault(id);   // pre-fill with current time as starting point
+    inp.style.display = "";
+    if (label) label.style.display = "";
+    t.offsetManuallySet = true;
+    updateTimerOffset(id);
+  } else {
+    inp.style.display = "none";
+    if (label) { label.style.display = "none"; label.textContent = ""; }
+    t.offsetManuallySet = false;
+    t.offsetSeconds = 0;
+  }
+}
+
+function updateTimerOffset(id) {
+  const t = getTimer(id);
+  if (!t || t.state !== "idle") return;
+  const inp = document.getElementById(`timerStartedAt-${id}`);
+  const label = document.getElementById(`timerOffsetLabel-${id}`);
+  if (!inp || !inp.value) { t.offsetSeconds = 0; if (label) label.textContent = "now"; return; }
+  const [hh, mm] = inp.value.split(":").map(Number);
+  const now = new Date();
+  const startDate = new Date(now);
+  startDate.setHours(hh, mm, 0, 0);
+  // If start time is in the future (e.g. wrap around midnight), treat as yesterday
+  if (startDate > now) startDate.setDate(startDate.getDate() - 1);
+  const diffSec = Math.floor((now - startDate) / 1000);
+  t.offsetSeconds = Math.max(0, diffSec);
+  const total = t.hours*3600 + t.minutes*60 + t.seconds;
+  if (t.offsetSeconds >= total) {
+    if (label) label.textContent = "⚠ already expired";
+    t.offsetSeconds = total; // clamp
+  } else if (t.offsetSeconds === 0) {
+    if (label) label.textContent = "now";
+  } else {
+    const mins = Math.floor(t.offsetSeconds / 60);
+    const secs = t.offsetSeconds % 60;
+    if (label) label.textContent = `${mins}m ${secs}s ago`;
+  }
+}
+
+function updateTimerDisplay(t) {
+  const digits = document.getElementById(`timerDigits-${t.id}`);
+  const status = document.getElementById(`timerStatus-${t.id}`);
+  const card = document.getElementById(`timerCard-${t.id}`);
+  const startBtn = document.getElementById(`timerBtnStart-${t.id}`);
+  const progressWrap = document.getElementById(`timerProgressWrap-${t.id}`);
+  const configEl = document.getElementById(`timerConfig-${t.id}`);
+  if (!digits) return;
+
+  const display = t.state === "idle" ? fmtTime(t.hours*3600+t.minutes*60+t.seconds) : fmtTime(t.remaining);
+  digits.textContent = display;
+  digits.className = "timer-digits";
+  card.className = "timer-card";
+  card.querySelector(".card-accent-line").style.cssText = "";
+
+  if (t.state === "running") {
+    digits.classList.add("running");
+    if (t.remaining <= 60 && t.remaining > 0) {
+      digits.classList.add("last-minute");
+    }
+    card.classList.add("running");
+    status.textContent = t.remaining <= 60 ? "Last minute!" : "Running";
+    startBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg> Pause`;
+    progressWrap.style.display = "block";
+    configEl.style.display = "none";
+    const pct = (t.remaining / t.totalSeconds) * 100;
+    document.getElementById(`timerProgress-${t.id}`).style.width = pct + "%";
+    document.getElementById(`timerProgress-${t.id}`).className = "progress-bar-fill";
+    document.getElementById(`timerProgressElapsed-${t.id}`).textContent = fmtTime(t.totalSeconds - t.remaining);
+    document.getElementById(`timerProgressTotal-${t.id}`).textContent = fmtTime(t.totalSeconds);
+  } else if (t.state === "paused") {
+    digits.classList.add("running");
+    status.textContent = "Paused";
+    startBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Resume`;
+    progressWrap.style.display = "block";
+    configEl.style.display = "none";
+  } else if (t.state === "expired") {
+    digits.classList.add("expired");
+    card.classList.add("expired");
+    status.textContent = "EXPIRED ⚠";
+    startBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start`;
+    progressWrap.style.display = "none";
+    configEl.style.display = "block";
+  } else {
+    status.textContent = "Ready";
+    startBtn.innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start`;
+    progressWrap.style.display = "none";
+    configEl.style.display = "flex";
+  }
+}
+
+
+function sortTimerCards() {
+  const grid = document.getElementById("timersGrid");
+  const addBtn = grid.querySelector(".add-timer-card");
+
+  // Score for sorting: lower = earlier in list
+  function sortScore(t) {
+    if (t.state === "running") return t.remaining;
+    if (t.state === "paused")  return 100000 + t.remaining;
+    if (t.state === "idle")    return 200000 + (t.hours*3600 + t.minutes*60 + t.seconds);
+    if (t.state === "expired") return 900000;
+    return 999999;
+  }
+
+  const sorted = [...timers].sort((a, b) => sortScore(a) - sortScore(b));
+
+  sorted.forEach(t => {
+    const card = document.getElementById(`timerCard-${t.id}`);
+    if (card) grid.insertBefore(card, addBtn);
+  });
+}
+
+function timerStartPause(id) {
+  const t = getTimer(id);
+  if (!t) return;
+  if (t.state === "idle" || t.state === "expired") {
+    const total = t.hours*3600 + t.minutes*60 + t.seconds;
+    if (total <= 0) return;
+    // Only apply offset if user explicitly set a past start time
+    if (t.state === "idle" && t.offsetManuallySet) updateTimerOffset(id);
+    t.totalSeconds = total;
+    t.remaining = t.offsetManuallySet ? Math.max(1, total - t.offsetSeconds) : total;
+    t.state = "running";
+    sortTimerCards();
+    startSortInterval();
+    const startedAtInp = document.getElementById(`timerStartedAt-${id}`);
+    const startNote = t.offsetSeconds > 0 && startedAtInp
+      ? ` (started at ${startedAtInp.value}, ${fmtTime(t.offsetSeconds)} elapsed)` : "";
+    addTimerLog(`Timer "${t.name}" started — ${fmtTime(total)} total${startNote}`, "log-timer", t.color);
+    t.interval = setInterval(() => {
+      t.remaining--;
+      if (t.remaining <= 0) {
+        clearInterval(t.interval);
+        t.state = "expired";
+        t.remaining = 0;
+        updateTimerDisplay(t);
+        sortTimerCards();
+        addTimerLog(`Timer "${t.name}" EXPIRED!`, "log-alert", t.color);
+        showModal("⏰", "Timer Expired!", `"${t.name}" has reached zero.`, [
+          { label: "OK", cls: "btn-primary" }
+        ]);
+      } else {
+        updateTimerDisplay(t);
+      }
+    }, 1000);
+  } else if (t.state === "running") {
+    clearInterval(t.interval);
+    t.state = "paused";
+    addTimerLog(`Timer "${t.name}" paused at ${fmtTime(t.remaining)}`, "log-timer", t.color);
+  } else if (t.state === "paused") {
+    t.state = "running";
+    sortTimerCards();
+    startSortInterval();
+    addTimerLog(`Timer "${t.name}" resumed`, "log-timer", t.color);
+    t.interval = setInterval(() => {
+      t.remaining--;
+      if (t.remaining <= 0) {
+        clearInterval(t.interval);
+        t.state = "expired";
+        t.remaining = 0;
+        updateTimerDisplay(t);
+        sortTimerCards();
+        addTimerLog(`Timer "${t.name}" EXPIRED!`, "log-alert", t.color);
+        showModal("⏰", "Timer Expired!", `"${t.name}" has reached zero.`, [
+          { label: "OK", cls: "btn-primary" }
+        ]);
+      } else {
+        updateTimerDisplay(t);
+      }
+    }, 1000);
+  }
+  updateTimerDisplay(t);
+}
+
+function timerReset(id) {
+  const t = getTimer(id);
+  if (!t) return;
+  clearInterval(t.interval);
+  t.state = "idle";
+  t.remaining = 0;
+  t.offsetSeconds = 0;
+  t.offsetManuallySet = false;
+  updateTimerDisplay(t);
+  // Uncheck "already started" and hide time input
+  const cbReset = document.getElementById(`timerAlreadyStarted-${id}`);
+  const inpReset = document.getElementById(`timerStartedAt-${id}`);
+  const lblReset = document.getElementById(`timerOffsetLabel-${id}`);
+  if (cbReset) cbReset.checked = false;
+  if (inpReset) inpReset.style.display = "none";
+  if (lblReset) { lblReset.style.display = "none"; lblReset.textContent = ""; }
+  sortTimerCards(); // reset time back to now
+  addTimerLog(`Timer "${t.name}" reset`, "log-timer", t.color);
+}
+
+function removeTimer(id) {
+  const t = getTimer(id);
+  if (t) { clearInterval(t.interval); }
+  timers = timers.filter(t => t.id !== id);
+  const card = document.getElementById(`timerCard-${id}`);
+  if (card) card.remove();
+}
+
+function resetAllTimers() {
+  timers.forEach(t => timerReset(t.id));
+}
+
+function clearLog() {
+  const list = document.getElementById("logList");
+  list.innerHTML = `<div class="log-empty" id="logEmpty">No events yet.</div>`;
+}
+
+
+// Set initial instruction on load
+document.addEventListener("DOMContentLoaded", () => {
+  showInstruction("⏳ Waiting for operator to say \"Balloon inflated\" — then click Laser ON.", "info");
+  document.getElementById("btnLaserReset").style.display = "none";
+});
+
+
+// Re-sort timer cards every second while any timer is running
+let sortInterval = null;
+function startSortInterval() {
+  if (sortInterval) return;
+  sortInterval = setInterval(() => {
+    const anyRunning = timers.some(t => t.state === "running");
+    if (anyRunning) {
+      sortTimerCards();
+    } else {
+      clearInterval(sortInterval);
+      sortInterval = null;
+    }
+  }, 1000);
+}
+
+// Initialize with a few preset timers
+addTimer("Sample Timer A", 0, 2, 30);
+addTimer("Sample Timer B", 0, 10, 0);
+</script>
+</body>
+</html>
