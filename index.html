@@ -541,6 +541,57 @@
     animation: last-minute-blink 0.8s ease-in-out infinite;
   }
 
+
+  /* === TOAST NOTIFICATIONS === */
+  #toastContainer {
+    position: fixed;
+    bottom: var(--space-6);
+    right: var(--space-6);
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    z-index: 300;
+    pointer-events: none;
+  }
+  .toast {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+    border-radius: var(--radius-lg);
+    background: var(--color-surface-2);
+    border: 1px solid var(--color-border);
+    box-shadow: var(--shadow-lg);
+    font-size: var(--text-sm);
+    font-weight: 500;
+    color: var(--color-text);
+    pointer-events: auto;
+    animation: toast-in 0.3s cubic-bezier(0.16,1,0.3,1);
+    max-width: 320px;
+  }
+  @keyframes toast-in {
+    from { opacity: 0; transform: translateX(24px); }
+    to   { opacity: 1; transform: none; }
+  }
+  .toast.toast-out {
+    animation: toast-out 0.3s ease-in forwards;
+  }
+  @keyframes toast-out {
+    from { opacity: 1; transform: none; }
+    to   { opacity: 0; transform: translateX(24px); }
+  }
+  .toast-dot {
+    width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+  }
+  .toast-close {
+    margin-left: auto; padding: 2px 6px;
+    border-radius: var(--radius-sm);
+    font-size: var(--text-xs); color: var(--color-text-muted);
+    cursor: pointer; flex-shrink: 0;
+    transition: background var(--transition-interactive);
+  }
+  .toast-close:hover { background: var(--color-surface-offset); }
+
   /* === RESPONSIVE === */
   @media (max-width: 600px) {
     .main { padding: var(--space-4); }
@@ -581,7 +632,7 @@
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.22 4.22l2.12 2.12M17.66 17.66l2.12 2.12M2 12h3M19 12h3M4.22 19.78l2.12-2.12M17.66 6.34l2.12-2.12"/></svg>
           Laser Protocol
         </div>
-        <div class="laser-subtitle">Hear "Balloon inflated" → click Laser ON (150 s) → say "Laser off" → 60 s cooldown → say "Inflate" → repeat</div>
+        <div class="laser-subtitle">Set cycles, ON duration & OFF duration → click Laser ON → say "Laser off" → cooldown → say "Inflate" → repeat</div>
       </div>
       <div id="laserStatusBadge" class="laser-status-badge off">
         <span class="status-dot"></span>
@@ -606,8 +657,8 @@
         <div class="laser-metric-value" id="laserPhaseLabel">—</div>
       </div>
       <div class="laser-metric">
-        <div class="laser-metric-label">Cycle Count</div>
-        <div class="laser-metric-value" id="laserCycleCount">0</div>
+        <div class="laser-metric-label">Cycle Progress</div>
+        <div class="laser-metric-value" id="laserCycleCount">0 / <span id="laserCycleTarget">—</span></div>
       </div>
     </div>
 
@@ -622,14 +673,46 @@
     </div>
 
     <div class="laser-controls" style="margin-top: var(--space-4)">
-      <button class="btn btn-success btn-laser-main" id="btnLaserOn" onclick="laserOn()">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-        Laser ON
-      </button>
-      <button class="btn btn-ghost btn-sm" id="btnLaserReset" onclick="laserReset()" style="display:none">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
-        Reset
-      </button>
+      <div id="laserSetupRow" style="display:flex;align-items:center;gap:var(--space-4);flex-wrap:wrap">
+        <div style="display:flex;align-items:center;gap:var(--space-2)">
+          <label style="font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap">Total cycles</label>
+          <input type="number" id="inputTotalCycles" min="1" max="999" value="8"
+            class="duration-field" style="width:60px;font-size:var(--text-sm)"
+            title="Number of laser cycles to run">
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-2)">
+          <label style="font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap">Laser ON</label>
+          <input type="number" id="inputLaserOnDuration" min="1" max="9999" value="150"
+            class="duration-field" style="width:64px;font-size:var(--text-sm)"
+            title="Laser ON duration in seconds">
+          <span style="font-size:var(--text-xs);color:var(--color-text-faint)">s</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:var(--space-2)">
+          <label style="font-size:var(--text-xs);color:var(--color-text-muted);white-space:nowrap">Laser OFF</label>
+          <input type="number" id="inputLaserOffDuration" min="1" max="9999" value="60"
+            class="duration-field" style="width:64px;font-size:var(--text-sm)"
+            title="Laser OFF / cooldown duration in seconds">
+          <span style="font-size:var(--text-xs);color:var(--color-text-faint)">s</span>
+        </div>
+        <button class="btn btn-success btn-laser-main" id="btnLaserOn" onclick="laserOn()">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Laser ON
+        </button>
+      </div>
+      <div id="laserRunningRow" style="display:none;align-items:center;gap:var(--space-3);flex-wrap:wrap">
+        <button class="btn btn-success btn-laser-main" id="btnLaserOnRunning" onclick="laserOn()" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Laser ON
+        </button>
+        <button class="btn btn-warning btn-sm" id="btnLaserStop" onclick="laserStop()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>
+          Stop Protocol
+        </button>
+        <button class="btn btn-ghost btn-sm" id="btnLaserReset" onclick="laserReset()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          Reset
+        </button>
+      </div>
     </div>
   </section>
 
@@ -689,6 +772,9 @@
   </div>
 
 </main>
+
+<!-- TOAST CONTAINER -->
+<div id="toastContainer"></div>
 
 <!-- MODAL -->
 <div class="modal-overlay" id="alertModal">
@@ -803,6 +889,26 @@ function showFullLaserLog() {
   showModal("📋", "Full Laser Log", tableHtml, [{ label: "Close", cls: "btn-ghost" }], true);
 }
 
+
+// ---- TOAST NOTIFICATIONS (non-blocking) ----
+function showToast(msg, color, duration) {
+  const container = document.getElementById("toastContainer");
+  const toast = document.createElement("div");
+  toast.className = "toast";
+  const dot = color ? `<span class="toast-dot" style="background:${color}"></span>` : "⏰";
+  toast.innerHTML = `${dot}<span>${msg}</span><button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>`;
+  container.appendChild(toast);
+  // Auto-dismiss after 8 seconds
+  const timer = setTimeout(() => dismissToast(toast), duration || 8000);
+  toast._dismissTimer = timer;
+}
+function dismissToast(toast) {
+  if (!toast || !toast.parentElement) return;
+  clearTimeout(toast._dismissTimer);
+  toast.classList.add("toast-out");
+  setTimeout(() => toast.remove(), 300);
+}
+
 // ---- MODAL ----
 function showModal(icon, title, message, actions, isHtml) {
   document.getElementById("modalIcon").textContent = icon;
@@ -900,14 +1006,16 @@ document.addEventListener("click", () => { try { getAudioCtx().resume(); } catch
 // Only two user actions: click "Laser ON" (at start & after each inflate), and Reset.
 // Log only laser ON and laser OFF events.
 
-const LASER_ON_DURATION  = 150;  // seconds
-const COOLDOWN_DURATION  = 60;   // seconds
+let laserOnDuration    = 150;    // seconds (user-configurable)
+let laserOffDuration   = 60;     // seconds (user-configurable)
 
-let laserState    = "IDLE";      // IDLE | LASER_ON | COOLDOWN | WAIT_INFLATE
-let laserTimer    = null;
-let laserRemaining = 0;
-let laserTotal     = 0;
-let laserCycles    = 0;
+let laserState         = "IDLE"; // IDLE | LASER_ON | COOLDOWN | WAIT_INFLATE
+let laserTimer         = null;
+let laserRemaining     = 0;
+let laserTotal         = 0;
+let laserCycles        = 0;
+let laserTargetCycles  = 0;      // 0 = unlimited
+let laserPhaseStartMs  = null;   // wall-clock start of current phase
 
 // ---- badge / metric helpers ----
 function setLaserBadge(state) {
@@ -937,7 +1045,8 @@ function setLaserMetrics(stateVal, phaseLabel, phaseTimer, progressPct, progress
 
   document.getElementById("laserPhaseLabel").textContent = phaseLabel;
   document.getElementById("laserPhaseTimer").textContent = phaseTimer;
-  document.getElementById("laserCycleCount").textContent = laserCycles;
+  const _tgt = laserTargetCycles > 0 ? String(laserTargetCycles) : "∞";
+  document.getElementById("laserCycleCount").textContent = laserCycles + " / " + _tgt;
 
   const wrap = document.getElementById("laserProgressWrap");
   const fill = document.getElementById("laserProgressFill");
@@ -966,28 +1075,38 @@ function showInstruction(msg, cls) {
 function laserOn() {
   if (laserState !== "IDLE" && laserState !== "WAIT_INFLATE") return;
 
-  laserCycles++;
-  laserState     = "LASER_ON";
-  laserRemaining = LASER_ON_DURATION;
-  laserTotal     = LASER_ON_DURATION;
+  // On first start, read all settings and switch UI rows
+  if (laserState === "IDLE") {
+    laserTargetCycles = parseInt(document.getElementById("inputTotalCycles").value) || 0;
+    laserOnDuration   = Math.max(1, parseInt(document.getElementById("inputLaserOnDuration").value) || 150);
+    laserOffDuration  = Math.max(1, parseInt(document.getElementById("inputLaserOffDuration").value) || 60);
+    document.getElementById("laserSetupRow").style.display = "none";
+    document.getElementById("laserRunningRow").style.display = "flex";
+  }
 
-  document.getElementById("btnLaserOn").disabled = true;
-  document.getElementById("btnLaserReset").style.display = "";
+  laserCycles++;
+  laserState        = "LASER_ON";
+  laserRemaining    = laserOnDuration;
+  laserTotal        = laserOnDuration;
+  laserPhaseStartMs = Date.now();
+
+  document.getElementById("btnLaserOnRunning").disabled = true;
 
   setLaserBadge("LASER_ON");
   setLaserMetrics("ON", "Laser ON", fmtTime(laserRemaining), 100, "on");
-  showInstruction("🔴 Say: \"Laser on\" — laser running for 150 seconds.", "success");
+  showInstruction("🔴 Say: \"Laser on\" — laser running for " + fmtTime(laserOnDuration) + ".", "success");
 
   // Log laser ON with timestamp
-  addLaserLog("Laser ON — Cycle " + laserCycles + " started (150 s)", "log-laser-on");
+  addLaserLog("Laser ON — Cycle " + laserCycles + (laserTargetCycles > 0 ? "/" + laserTargetCycles : "") + " started (150 s)", "log-laser-on");
 
   laserTick();
 }
 
 function laserTick() {
   if (laserTimer) clearInterval(laserTimer);
+  laserPhaseStartMs = laserPhaseStartMs || (Date.now() - ((laserTotal - laserRemaining) * 1000));
   laserTimer = setInterval(() => {
-    laserRemaining--;
+    laserRemaining = Math.max(0, laserTotal - Math.floor((Date.now() - laserPhaseStartMs) / 1000));
     const pct = Math.max(0, (laserRemaining / laserTotal) * 100);
 
     // Audio cues — LASER_ON and COOLDOWN phases
@@ -1037,45 +1156,104 @@ function laserTick() {
       if (laserRemaining <= 0) {
         clearInterval(laserTimer);
         // Log laser OFF
-        addLaserLog("Laser OFF — Cycle " + laserCycles + " ended. Cooldown 60 s.", "log-laser-off");
+        addLaserLog("Laser OFF — Cycle " + laserCycles + (laserTargetCycles > 0 ? "/" + laserTargetCycles : "") + " ended.", "log-laser-off");
 
-        // Transition to cooldown
-        laserState     = "COOLDOWN";
-        laserRemaining = COOLDOWN_DURATION;
-        laserTotal     = COOLDOWN_DURATION;
-        setLaserBadge("COOLDOWN");
-        setLaserMetrics("OFF", "Cooldown", fmtTime(laserRemaining), 100, "cooling");
-        showInstruction("🛑 Say: \"Laser off\" — balloon deflating. Cooldown 60 s running (do NOT tell operator to inflate yet).", "warn");
-        laserTick();
+        // Last cycle? Skip cooldown entirely
+        if (laserTargetCycles > 0 && laserCycles >= laserTargetCycles) {
+          laserState = "IDLE";
+          setLaserBadge("IDLE");
+          setLaserMetrics("OFF", "Complete", "—", null, "");
+          showInstruction("🎉 All " + laserTargetCycles + " cycles complete! Protocol finished.", "success");
+          document.getElementById("laserSetupRow").style.display = "flex";
+          document.getElementById("laserRunningRow").style.display = "none";
+          addLaserLog("Protocol complete — all " + laserTargetCycles + " cycles done.", "log-laser-off");
+          showModal("🎉", "Protocol Complete!", "All " + laserTargetCycles + " cycles have been completed successfully.", [
+            { label: "Great!", cls: "btn-success" }
+          ]);
+        } else {
+          // More cycles to go — run cooldown before next inflate
+          laserState        = "COOLDOWN";
+          laserRemaining    = laserOffDuration;
+          laserTotal        = laserOffDuration;
+          laserPhaseStartMs = Date.now();
+          setLaserBadge("COOLDOWN");
+          setLaserMetrics("OFF", "Cooldown", fmtTime(laserRemaining), 100, "cooling");
+          showInstruction("🛑 Say: \"Laser off\" — balloon deflating. Cooldown " + fmtTime(laserOffDuration) + " running (do NOT tell operator to inflate yet).", "warn");
+          laserTick();
+        }
       }
     } else if (laserState === "COOLDOWN") {
       setLaserMetrics("OFF", "Cooldown", fmtTime(laserRemaining), pct, "cooling");
       if (laserRemaining <= 0) {
         clearInterval(laserTimer);
-        // Cooldown done — tell operator to inflate
-        laserState = "WAIT_INFLATE";
-        setLaserBadge("WAIT_INFLATE");
-        setLaserMetrics("WAITING", "Waiting", "—", null, "");
-        showInstruction("✅ Say: \"Inflate the balloon\" — wait for operator to confirm, then click Laser ON.", "gold");
-        // Re-enable Laser ON button
-        document.getElementById("btnLaserOn").disabled = false;
+        // Cooldown done — check if we've hit the target cycle count
+        if (laserTargetCycles > 0 && laserCycles >= laserTargetCycles) {
+          // All cycles complete!
+          laserState = "IDLE";
+          setLaserBadge("IDLE");
+          setLaserMetrics("OFF", "Complete", "—", null, "");
+          showInstruction("🎉 All " + laserTargetCycles + " cycles complete! Protocol finished.", "success");
+          document.getElementById("laserSetupRow").style.display = "flex";
+          document.getElementById("laserRunningRow").style.display = "none";
+          addLaserLog("Protocol complete — all " + laserTargetCycles + " cycles done.", "log-laser-off");
+          showModal("🎉", "Protocol Complete!", "All " + laserTargetCycles + " cycles have been completed successfully.", [
+            { label: "Great!", cls: "btn-success" }
+          ]);
+        } else {
+          // More cycles to go — tell operator to inflate
+          laserState = "WAIT_INFLATE";
+          setLaserBadge("WAIT_INFLATE");
+          const remaining = laserTargetCycles > 0 ? " (" + (laserTargetCycles - laserCycles) + " left)" : "";
+          setLaserMetrics("WAITING", "Waiting", "—", null, "");
+          showInstruction("✅ Say: \"Inflate the balloon\" — wait for operator to confirm, then click Laser ON." + remaining, "gold");
+          // Re-enable Laser ON button
+          document.getElementById("btnLaserOnRunning").disabled = false;
+        }
       }
     }
   }, 1000);
 }
 
+function laserStop() {
+  // Stop after current phase completes — ask for confirmation
+  showModal("⚠️", "Stop Protocol?", "This will stop the protocol after the current phase. The laser will not be turned on again. Are you sure?", [
+    { label: "Yes, Stop", cls: "btn-warning", fn: () => {
+      if (laserTimer) clearInterval(laserTimer);
+      laserState = "IDLE";
+      laserRemaining = 0;
+      laserTotal = 0;
+      laserPhaseStartMs = null;
+      hideLaserCountdown();
+      setLaserBadge("IDLE");
+      setLaserMetrics("OFF", "Stopped", "—", null, "");
+      showInstruction("🛑 Protocol stopped after cycle " + laserCycles + ".", "warn");
+      document.getElementById("laserSetupRow").style.display = "flex";
+      document.getElementById("laserRunningRow").style.display = "none";
+      addLaserLog("Protocol stopped manually after cycle " + laserCycles + ".", "log-laser-off");
+    }},
+    { label: "Cancel", cls: "btn-ghost" }
+  ]);
+}
+
 function laserReset() {
   if (laserTimer) clearInterval(laserTimer);
-  laserState    = "IDLE";
-  laserRemaining = 0;
-  laserTotal     = 0;
-  laserCycles    = 0;
+  laserState        = "IDLE";
+  laserRemaining    = 0;
+  laserTotal        = 0;
+  laserCycles       = 0;
+  laserTargetCycles = 0;
+  laserOnDuration   = 150;
+  laserOffDuration  = 60;
+  laserPhaseStartMs = null;
   hideLaserCountdown();
   setLaserBadge("IDLE");
   setLaserMetrics("OFF", "—", "—", null, "");
   showInstruction(null, "");
-  document.getElementById("btnLaserOn").disabled = false;
-  document.getElementById("btnLaserReset").style.display = "none";
+  document.getElementById("laserSetupRow").style.display = "flex";
+  document.getElementById("laserRunningRow").style.display = "none";
+  document.getElementById("inputTotalCycles").value = 8;
+  document.getElementById("inputLaserOnDuration").value = 150;
+  document.getElementById("inputLaserOffDuration").value = 60;
 }
 
 // ---- INDEPENDENT TIMERS ----
@@ -1094,6 +1272,7 @@ function addTimer(name, hh, mm, ss) {
     id, name: name || `Timer ${id}`,
     hours: hh || 0, minutes: mm || 5, seconds: ss || 0,
     totalSeconds: 0, remaining: 0,
+    wallStartMs: null,       // Date.now() when timer started (wall-clock)
     startedAt: null,
     offsetSeconds: 0,
     offsetManuallySet: false,
@@ -1152,15 +1331,15 @@ function renderTimerCard(timer) {
           <div class="duration-fields">
             <input class="duration-field" type="number" min="0" max="99" value="${String(timer.hours).padStart(2,"0")}"
               id="timerHH-${timer.id}" aria-label="Hours" title="Hours"
-              onchange="updateTimerDuration(${timer.id})">
+              oninput="updateTimerDuration(${timer.id})">
             <span class="duration-sep">h</span>
             <input class="duration-field" type="number" min="0" max="59" value="${String(timer.minutes).padStart(2,"0")}"
               id="timerMM-${timer.id}" aria-label="Minutes" title="Minutes"
-              onchange="updateTimerDuration(${timer.id})">
+              oninput="updateTimerDuration(${timer.id})">
             <span class="duration-sep">m</span>
             <input class="duration-field" type="number" min="0" max="59" value="${String(timer.seconds).padStart(2,"0")}"
               id="timerSS-${timer.id}" aria-label="Seconds" title="Seconds"
-              onchange="updateTimerDuration(${timer.id})">
+              oninput="updateTimerDuration(${timer.id})">
             <span class="duration-sep">s</span>
           </div>
         </div>
@@ -1174,7 +1353,7 @@ function renderTimerCard(timer) {
           <input class="duration-field" type="time" id="timerStartedAt-${timer.id}"
             style="width:90px;font-size:var(--text-xs);display:none"
             title="Set the time when the timer was actually started"
-            onchange="updateTimerOffset(${timer.id})">
+            oninput="updateTimerOffset(${timer.id})">
           <span style="font-size:var(--text-xs);color:var(--color-text-faint)" id="timerOffsetLabel-${timer.id}" style="display:none"></span>
         </div>
       </div>
@@ -1324,21 +1503,43 @@ function sortTimerCards() {
   const grid = document.getElementById("timersGrid");
   const addBtn = grid.querySelector(".add-timer-card");
 
-  // Score for sorting: lower = earlier in list
+  // Full sort score — every timer gets a position
   function sortScore(t) {
-    if (t.state === "running") return t.remaining;
-    if (t.state === "paused")  return 100000 + t.remaining;
-    if (t.state === "idle")    return 200000 + (t.hours*3600 + t.minutes*60 + t.seconds);
-    if (t.state === "expired") return 900000;
+    if (t.state === "running") return t.remaining;                              // soonest first
+    if (t.state === "paused")  return 100000 + t.remaining;                    // paused after running
+    if (t.state === "idle")    return 200000 + (t.hours*3600 + t.minutes*60 + t.seconds); // idle after paused
+    if (t.state === "expired") return 900000;                                   // expired last
     return 999999;
   }
 
   const sorted = [...timers].sort((a, b) => sortScore(a) - sortScore(b));
 
+  // Reorder all cards in one pass using a document fragment reference approach:
+  // insert each card before the next one in sorted order, preserving relative DOM integrity
+  // Skip any card that currently holds focus to avoid disrupting user input
+  const focusedCard = [...grid.querySelectorAll(".timer-card")]
+    .find(c => c.contains(document.activeElement));
+
   sorted.forEach(t => {
     const card = document.getElementById(`timerCard-${t.id}`);
-    if (card) grid.insertBefore(card, addBtn);
+    if (!card || card === focusedCard) return;
+    grid.insertBefore(card, addBtn);
   });
+
+  // If there was a focused card, reinsert it in its correct sorted position
+  if (focusedCard) {
+    const focusedTimer = timers.find(t => focusedCard.id === `timerCard-${t.id}`);
+    if (focusedTimer) {
+      const focusScore = sortScore(focusedTimer);
+      // Find the first card in current DOM order whose score is greater
+      const allCards = [...grid.querySelectorAll(".timer-card")];
+      const insertBefore = allCards.find(c => {
+        const t = timers.find(tt => c.id === `timerCard-${tt.id}`);
+        return t && sortScore(t) > focusScore;
+      });
+      grid.insertBefore(focusedCard, insertBefore || addBtn);
+    }
+  }
 }
 
 function timerStartPause(id) {
@@ -1351,15 +1552,16 @@ function timerStartPause(id) {
     if (t.state === "idle" && t.offsetManuallySet) updateTimerOffset(id);
     t.totalSeconds = total;
     t.remaining = t.offsetManuallySet ? Math.max(1, total - t.offsetSeconds) : total;
+    t.wallStartMs = Date.now() - ((total - t.remaining) * 1000); // wall-clock anchor
     t.state = "running";
     sortTimerCards();
-    startSortInterval();
     const startedAtInp = document.getElementById(`timerStartedAt-${id}`);
     const startNote = t.offsetSeconds > 0 && startedAtInp
       ? ` (started at ${startedAtInp.value}, ${fmtTime(t.offsetSeconds)} elapsed)` : "";
     addTimerLog(`Timer "${t.name}" started — ${fmtTime(total)} total${startNote}`, "log-timer", t.color);
     t.interval = setInterval(() => {
-      t.remaining--;
+      const elapsed = Math.floor((Date.now() - t.wallStartMs) / 1000);
+      t.remaining = Math.max(0, t.totalSeconds - elapsed);
       if (t.remaining <= 0) {
         clearInterval(t.interval);
         t.state = "expired";
@@ -1367,11 +1569,11 @@ function timerStartPause(id) {
         updateTimerDisplay(t);
         sortTimerCards();
         addTimerLog(`Timer "${t.name}" EXPIRED!`, "log-alert", t.color);
-        showModal("⏰", "Timer Expired!", `"${t.name}" has reached zero.`, [
-          { label: "OK", cls: "btn-primary" }
-        ]);
+        showToast(`⏰ "${t.name}" expired!`, t.color);
+        saveState();
       } else {
         updateTimerDisplay(t);
+        saveState();
       }
     }, 1000);
   } else if (t.state === "running") {
@@ -1380,11 +1582,12 @@ function timerStartPause(id) {
     addTimerLog(`Timer "${t.name}" paused at ${fmtTime(t.remaining)}`, "log-timer", t.color);
   } else if (t.state === "paused") {
     t.state = "running";
+    t.wallStartMs = Date.now() - ((t.totalSeconds - t.remaining) * 1000);
     sortTimerCards();
-    startSortInterval();
     addTimerLog(`Timer "${t.name}" resumed`, "log-timer", t.color);
     t.interval = setInterval(() => {
-      t.remaining--;
+      const elapsed = Math.floor((Date.now() - t.wallStartMs) / 1000);
+      t.remaining = Math.max(0, t.totalSeconds - elapsed);
       if (t.remaining <= 0) {
         clearInterval(t.interval);
         t.state = "expired";
@@ -1392,11 +1595,11 @@ function timerStartPause(id) {
         updateTimerDisplay(t);
         sortTimerCards();
         addTimerLog(`Timer "${t.name}" EXPIRED!`, "log-alert", t.color);
-        showModal("⏰", "Timer Expired!", `"${t.name}" has reached zero.`, [
-          { label: "OK", cls: "btn-primary" }
-        ]);
+        showToast(`⏰ "${t.name}" expired!`, t.color);
+        saveState();
       } else {
         updateTimerDisplay(t);
+        saveState();
       }
     }, 1000);
   }
@@ -1409,6 +1612,7 @@ function timerReset(id) {
   clearInterval(t.interval);
   t.state = "idle";
   t.remaining = 0;
+  t.wallStartMs = null;
   t.offsetSeconds = 0;
   t.offsetManuallySet = false;
   updateTimerDisplay(t);
@@ -1448,24 +1652,209 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 
-// Re-sort timer cards every second while any timer is running
-let sortInterval = null;
-function startSortInterval() {
-  if (sortInterval) return;
-  sortInterval = setInterval(() => {
-    const anyRunning = timers.some(t => t.state === "running");
-    if (anyRunning) {
-      sortTimerCards();
-    } else {
-      clearInterval(sortInterval);
-      sortInterval = null;
-    }
-  }, 1000);
+// Sorting is triggered on state changes only (start, pause, resume, expire, reset)
+
+
+// ---- LOCAL STORAGE PERSISTENCE ----
+const LS_KEY = "labTimerState_v1";
+
+function saveState() {
+  const state = {
+    savedAt: Date.now(),
+    laser: {
+      state: laserState,
+      remaining: laserRemaining,
+      total: laserTotal,
+      cycles: laserCycles,
+      targetCycles: laserTargetCycles,
+      onDuration: laserOnDuration,
+      offDuration: laserOffDuration,
+      phaseStartMs: laserPhaseStartMs,
+    },
+    timers: timers.map(t => ({
+      id: t.id,
+      name: t.name,
+      hours: t.hours,
+      minutes: t.minutes,
+      seconds: t.seconds,
+      totalSeconds: t.totalSeconds,
+      remaining: t.remaining,
+      wallStartMs: t.wallStartMs,
+      offsetSeconds: t.offsetSeconds,
+      offsetManuallySet: t.offsetManuallySet,
+      color: t.color,
+      state: t.state,
+    })),
+    timerIdCounter,
+    laserEvents,
+    timerLogEvents,
+  };
+  try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch(e) {}
 }
 
-// Initialize with a few preset timers
-addTimer("Sample Timer A", 0, 2, 30);
-addTimer("Sample Timer B", 0, 10, 0);
+function loadState() {
+  let raw;
+  try { raw = localStorage.getItem(LS_KEY); } catch(e) {}
+  if (!raw) return false;
+  let state;
+  try { state = JSON.parse(raw); } catch(e) { return false; }
+
+  // Restore laser
+  const L = state.laser;
+  if (L) {
+    laserOnDuration   = L.onDuration  || 150;
+    laserOffDuration  = L.offDuration || 60;
+    laserTargetCycles = L.targetCycles || 0;
+    laserCycles       = L.cycles || 0;
+    laserPhaseStartMs = L.phaseStartMs || null;
+    laserTotal        = L.total || 0;
+    laserState        = L.state || "IDLE";
+
+    // Recompute remaining from wall clock if phase is active
+    if (laserPhaseStartMs && (laserState === "LASER_ON" || laserState === "COOLDOWN")) {
+      laserRemaining = Math.max(0, laserTotal - Math.floor((Date.now() - laserPhaseStartMs) / 1000));
+    } else {
+      laserRemaining = L.remaining || 0;
+    }
+
+    // Restore laser UI
+    document.getElementById("inputTotalCycles").value      = laserTargetCycles || 8;
+    document.getElementById("inputLaserOnDuration").value  = laserOnDuration;
+    document.getElementById("inputLaserOffDuration").value = laserOffDuration;
+
+    if (laserState !== "IDLE") {
+      document.getElementById("laserSetupRow").style.display  = "none";
+      document.getElementById("laserRunningRow").style.display = "flex";
+      restoreLaserUI();
+      if (laserState === "LASER_ON" || laserState === "COOLDOWN") {
+        if (laserRemaining > 0) laserTick();
+        else {
+          // Phase completed while page was closed — advance state
+          if (laserState === "LASER_ON") {
+            laserState = "COOLDOWN"; laserRemaining = laserOffDuration;
+            laserPhaseStartMs = Date.now();
+            restoreLaserUI(); laserTick();
+          } else {
+            laserState = "WAIT_INFLATE"; laserRemaining = 0;
+            restoreLaserUI();
+          }
+        }
+      }
+    }
+  }
+
+  // Restore timers
+  if (state.timerIdCounter) timerIdCounter = state.timerIdCounter;
+  if (state.timers && state.timers.length) {
+    // Clear default sample timers
+    document.querySelectorAll(".timer-card").forEach(c => c.remove());
+    timers = [];
+
+    state.timers.forEach(saved => {
+      const t = {
+        id: saved.id,
+        name: saved.name,
+        hours: saved.hours, minutes: saved.minutes, seconds: saved.seconds,
+        totalSeconds: saved.totalSeconds,
+        remaining: saved.remaining,
+        wallStartMs: saved.wallStartMs,
+        offsetSeconds: saved.offsetSeconds || 0,
+        offsetManuallySet: saved.offsetManuallySet || false,
+        color: saved.color,
+        state: saved.state,
+        interval: null,
+      };
+
+      // Recompute remaining from wall clock
+      if (t.wallStartMs && t.state === "running") {
+        t.remaining = Math.max(0, t.totalSeconds - Math.floor((Date.now() - t.wallStartMs) / 1000));
+        if (t.remaining <= 0) t.state = "expired";
+      }
+
+      timers.push(t);
+      renderTimerCard(t);
+      updateTimerDisplay(t);
+
+      // Resume interval if running
+      if (t.state === "running") {
+        t.interval = setInterval(() => {
+          const elapsed = Math.floor((Date.now() - t.wallStartMs) / 1000);
+          t.remaining = Math.max(0, t.totalSeconds - elapsed);
+          if (t.remaining <= 0) {
+            clearInterval(t.interval);
+            t.state = "expired";
+            t.remaining = 0;
+            updateTimerDisplay(t);
+            sortTimerCards();
+            addTimerLog(`Timer "${t.name}" EXPIRED!`, "log-alert", t.color);
+            showToast(`⏰ "${t.name}" expired!`, t.color);
+            saveState();
+          } else {
+            updateTimerDisplay(t);
+            saveState();
+          }
+        }, 1000);
+      }
+    });
+    sortTimerCards();
+  }
+
+  // Restore logs
+  if (state.laserEvents)    { laserEvents    = state.laserEvents;    rebuildLogUI("laserLogList",  "laserLogEmpty",  laserEvents,    "No laser events yet."); }
+  if (state.timerLogEvents) { timerLogEvents = state.timerLogEvents; rebuildLogUI("timerLogList",  "timerLogEmpty",  timerLogEvents, "No timer events yet."); }
+
+  return true;
+}
+
+function rebuildLogUI(listId, emptyId, events, emptyMsg) {
+  const list = document.getElementById(listId);
+  list.innerHTML = "";
+  if (!events || events.length === 0) {
+    list.innerHTML = `<div class="log-empty" id="${emptyId}">${emptyMsg}</div>`;
+    return;
+  }
+  // newest first in live panel
+  [...events].reverse().forEach(e => {
+    const el = document.createElement("div");
+    el.className = `log-entry ${e.cls || ""}`;
+    if (e.color) {
+      const dot = `<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${e.color};margin-right:4px;flex-shrink:0"></span>`;
+      el.innerHTML = `<span class="log-time">${e.ts}</span><span class="log-msg" style="display:flex;align-items:center;gap:2px">${dot}${e.msg}</span>`;
+    } else {
+      el.innerHTML = `<span class="log-time">${e.ts}</span><span class="log-msg">${e.msg}</span>`;
+    }
+    list.appendChild(el);
+  });
+}
+
+function restoreLaserUI() {
+  const cycleDisplay = laserTargetCycles > 0 ? laserTargetCycles : "∞";
+  if (laserState === "LASER_ON") {
+    setLaserBadge("LASER_ON");
+    setLaserMetrics("ON", "Laser ON", fmtTime(laserRemaining), Math.max(0,(laserRemaining/laserTotal)*100), "on");
+    showInstruction("🔴 Say: \"Laser on\" — laser running for " + fmtTime(laserOnDuration) + ".", "success");
+    document.getElementById("btnLaserOnRunning").disabled = true;
+  } else if (laserState === "COOLDOWN") {
+    setLaserBadge("COOLDOWN");
+    setLaserMetrics("OFF", "Cooldown", fmtTime(laserRemaining), Math.max(0,(laserRemaining/laserTotal)*100), "cooling");
+    showInstruction("🛑 Say: \"Laser off\" — balloon deflating. Cooldown " + fmtTime(laserOffDuration) + " running.", "warn");
+    document.getElementById("btnLaserOnRunning").disabled = true;
+  } else if (laserState === "WAIT_INFLATE") {
+    setLaserBadge("WAIT_INFLATE");
+    const left = laserTargetCycles > 0 ? " (" + (laserTargetCycles - laserCycles) + " left)" : "";
+    setLaserMetrics("WAITING", "Waiting", "—", null, "");
+    showInstruction("✅ Say: \"Inflate the balloon\" — wait for operator to confirm, then click Laser ON." + left, "gold");
+    document.getElementById("btnLaserOnRunning").disabled = false;
+  }
+  const _tgt = laserTargetCycles > 0 ? String(laserTargetCycles) : "∞";
+  document.getElementById("laserCycleCount").textContent = laserCycles + " / " + _tgt;
+}
+
+// Initialize — restore from localStorage or load defaults
+if (!loadState()) {
+  addTimer("Sample Timer A", 0, 2, 30);
+  addTimer("Sample Timer B", 0, 10, 0);
+}
 </script>
 </body>
 </html>
