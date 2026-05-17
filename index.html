@@ -982,6 +982,12 @@ function hideLaserCountdown() {
 }
 
 // Gentle rising two-note chime — "1 minute passed"
+// ---- BEEP EVENTS (Laser ON phase only) ----
+// Every 60 s elapsed: gentle two-tone chime (milestone)
+// 30 s remaining:     medium single beep (heads-up)
+// 10 s remaining:     strong alert beep + visual overlay appears
+
+// Gentle rising two-note chime — "1 minute passed"
 function beepMinuteMark() {
   playBeep(523, 0.18, 0.45, "sine");                          // C5
   setTimeout(() => playBeep(784, 0.28, 0.45, "sine"), 220);  // G5
@@ -1016,6 +1022,7 @@ let laserTotal         = 0;
 let laserCycles        = 0;
 let laserTargetCycles  = 0;      // 0 = unlimited
 let laserPhaseStartMs  = null;   // wall-clock start of current phase
+let _lastBeepRemaining = Infinity; // threshold tracker for audio cues
 
 // ---- badge / metric helpers ----
 function setLaserBadge(state) {
@@ -1085,10 +1092,11 @@ function laserOn() {
   }
 
   laserCycles++;
-  laserState        = "LASER_ON";
-  laserRemaining    = laserOnDuration;
-  laserTotal        = laserOnDuration;
-  laserPhaseStartMs = Date.now();
+  laserState         = "LASER_ON";
+  laserRemaining     = laserOnDuration;
+  laserTotal         = laserOnDuration;
+  laserPhaseStartMs  = Date.now();
+  _lastBeepRemaining = Infinity;
 
   document.getElementById("btnLaserOnRunning").disabled = true;
 
@@ -1109,44 +1117,28 @@ function laserTick() {
     laserRemaining = Math.max(0, laserTotal - Math.floor((Date.now() - laserPhaseStartMs) / 1000));
     const pct = Math.max(0, (laserRemaining / laserTotal) * 100);
 
-    // Audio cues — LASER_ON and COOLDOWN phases
-    if (laserState === "LASER_ON") {
-      const elapsed = laserTotal - laserRemaining;
-      // 1-minute milestone (every 60 s elapsed: at 60 s, 120 s, ...)
-      if (elapsed > 0 && elapsed % 60 === 0) {
-        beepMinuteMark();
+    // Audio cues — threshold-based to survive wall-clock skips
+    if (laserState === "LASER_ON" || laserState === "COOLDOWN") {
+      const prev = _lastBeepRemaining;
+      const cur  = laserRemaining;
+
+      if (laserState === "LASER_ON") {
+        // Minute marks: fire once each time elapsed crosses a 60 s boundary
+        const prevElapsed = laserTotal - prev;
+        const curElapsed  = laserTotal - cur;
+        if (Math.floor(curElapsed / 60) > Math.floor(prevElapsed / 60) && curElapsed > 0)
+          beepMinuteMark();
       }
-      // 30 s remaining
-      if (laserRemaining === 30) {
-        beep30s();
-      }
-      // 10 s remaining — alert beep + show visual overlay
-      if (laserRemaining === 10) {
-        beep10s();
-        showLaserCountdown(10);
-      } else if (laserRemaining > 0 && laserRemaining < 10) {
-        showLaserCountdown(laserRemaining);
-      } else if (laserRemaining === 0) {
-        hideLaserCountdown();
-      } else if (laserRemaining > 10) {
-        hideLaserCountdown();
-      }
-    } else if (laserState === "COOLDOWN") {
-      // 30 s remaining during cooldown
-      if (laserRemaining === 30) {
-        beep30s();
-      }
-      // 10 s remaining during cooldown — alert beep + visual overlay
-      if (laserRemaining === 10) {
-        beep10s();
-        showLaserCountdown(10);
-      } else if (laserRemaining > 0 && laserRemaining < 10) {
-        showLaserCountdown(laserRemaining);
-      } else if (laserRemaining === 0) {
-        hideLaserCountdown();
-      } else if (laserRemaining > 10) {
-        hideLaserCountdown();
-      }
+      // 30 s — fire once when crossing from >30 to ≤30
+      if (prev > 30 && cur <= 30 && cur > 0) beep30s();
+      // 10 s — fire once when crossing from >10 to ≤10
+      if (prev > 10 && cur <= 10 && cur > 0) beep10s();
+
+      // Visual countdown overlay
+      if (cur > 0 && cur <= 10) showLaserCountdown(cur);
+      else hideLaserCountdown();
+
+      _lastBeepRemaining = cur;
     } else {
       hideLaserCountdown();
     }
@@ -1172,10 +1164,11 @@ function laserTick() {
           ]);
         } else {
           // More cycles to go — run cooldown before next inflate
-          laserState        = "COOLDOWN";
-          laserRemaining    = laserOffDuration;
-          laserTotal        = laserOffDuration;
-          laserPhaseStartMs = Date.now();
+          laserState         = "COOLDOWN";
+          laserRemaining     = laserOffDuration;
+          laserTotal         = laserOffDuration;
+          laserPhaseStartMs  = Date.now();
+          _lastBeepRemaining = Infinity;
           setLaserBadge("COOLDOWN");
           setLaserMetrics("OFF", "Cooldown", fmtTime(laserRemaining), 100, "cooling");
           showInstruction("🛑 Say: \"Laser off\" — balloon deflating. Cooldown " + fmtTime(laserOffDuration) + " running (do NOT tell operator to inflate yet).", "warn");
